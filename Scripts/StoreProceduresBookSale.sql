@@ -1,12 +1,26 @@
 -- Get Book Sale by ID
 CREATE PROCEDURE sp_GetBookSales
-    @ClientId INT = NULL
+    @ClientId INT = NULL,
+    @StartDate DATETIME = NULL,
+    @EndDate DATETIME = NULL
 AS
 BEGIN
-    SELECT bs.id, bs.ClientId, bs.Date, c.Name, c.Identification, c.Phone, c.Address
+   SELECT bs.Id AS Id,
+          bs.Date, 
+          c.Id AS ClientId,    
+          c.Id as Client_id,
+          c.Name, 
+          c.Identification, 
+          c.Phone, 
+          c.Address,
+          bsd.Id AS BookSaleDetailId,
+		  bsd.BookId AS TemporalBookId,
+		  bsd.Price
     FROM BookSales bs
     INNER JOIN Clients c ON bs.ClientId = c.Id
-    WHERE (@ClientId IS NULL OR bs.Id = @ClientId);
+	INNER JOIN BookSalesDetails bsd on bsd.BookSaleId = bs.Id
+    WHERE (@ClientId IS NULL OR bs.Id = @ClientId)
+    AND ((@StartDate IS NULL AND @EndDate IS NULL) OR CONVERT(DATE, bs.Date) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate));
 END;
 
 -- Add Book Sale (with output parameter)

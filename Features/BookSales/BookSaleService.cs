@@ -23,21 +23,14 @@ namespace Features.BookSales
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<BookSale>> GetBookSalesAsync(int? clientId)
+        public async Task<IEnumerable<BookSale>> GetBookSalesAsync(int? clientId, DateTime? startDate, DateTime? endDate)
         {
-            return await _bookSaleRepository.GetBookSalesAsync(clientId);
+            return await _bookSaleRepository.GetBookSalesAsync(clientId, startDate, endDate);
         }
 
         public async Task<int> AddBookSaleAsync(BookSaleDto bookSaleDto)
         {
             var bookSale = _mapper.Map<BookSale>(bookSaleDto);
-            // bookSale.Client = await _clientRepository.GetClientByIdAsync(bookSaleDto.ClientId);
-            // foreach (var detailDto in bookSaleDto.Details)
-            // {
-            //     var detail = _mapper.Map<BookSaleDetail>(detailDto);
-            //     bookSale.Details.Add(detail);
-            //     // detail.Book = await _bookRepository.GetBookByIdAsync(detailDto.BookId);
-            // }
             return await _bookSaleRepository.AddBookSaleAsync(bookSale);
         }
     }

@@ -1,10 +1,8 @@
 using Dapper;
+using Features.Books;
 using Features.Clients;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
 using System.Data;
-using System.Threading.Tasks;
 
 namespace Features.BookSales
 {
@@ -17,28 +15,44 @@ namespace Features.BookSales
             _connectionString = configuration.GetConnectionString("db");
         }
 
-        // Get All BookSales
-        public async Task<IEnumerable<BookSale>>GetBookSalesAsync(int? clientId)
+        public async Task<IEnumerable<BookSale>>GetBookSalesAsync(int? clientId, DateTime? startDate, DateTime? endDate)
         {
+
+            var test = new DateTime(2022, 1, 1);
             using var connection = new SqlConnection(_connectionString);
-            
-            var bookSales = await connection.QueryAsync<BookSale, Client, BookSale>(
+            var bookSalesDictionary = new Dictionary<int, BookSale>();
+
+            var bookSales = await connection.QueryAsync<BookSale, Client, BookSaleDetail, BookSale>(
                 "sp_GetBookSales",
-                (bookSale, client) =>
+                (bookSale, client, bookSaleDetail) =>
                 {
-                    bookSale.Client = client; 
-                    bookSale.Client.Id = client.Id;
-                    return bookSale;
+                    // Check if the book sale already exists
+                    if (!bookSalesDictionary.TryGetValue(bookSale.Id, out var existingBookSale))
+                    {
+                        existingBookSale = bookSale;
+                        existingBookSale.Client = client;
+                        existingBookSale.Client.Id = client.Client_Id;
+                        existingBookSale.Details = new List<BookSaleDetail>();
+                        bookSalesDictionary.Add(bookSale.Id, existingBookSale);
+                    }
+
+                    // Add details if not null
+                    if (bookSaleDetail != null) 
+                    {
+                        bookSaleDetail.Book = new Book { Id = bookSaleDetail.TemporalBookId };
+                        existingBookSale.Details.Add(bookSaleDetail);
+                    }
+
+                    return existingBookSale;
                 },
-                new { ClientId = clientId },
-                splitOn: "ClientId", 
+                new { ClientId = clientId, StartDate = startDate != null ? startDate.ToString() : null, EndDate = endDate != null ? endDate.ToString() : null },
+                splitOn: "ClientId, BookSaleDetailId",  
                 commandType: CommandType.StoredProcedure
             );
 
             return bookSales;
         }
 
-        // Add BookSale (with output parameter)
         public async Task<int> AddBookSaleAsync(BookSale bookSale)
         {
             using var connection = new SqlConnection(_connectionString);

@@ -11,5 +11,8 @@ namespace Features.Clients
         public string Phone { get; set; }
         public string Address { get; set; }
         public int Status { get; set; }
+
+        [NotMapped]
+        public int Client_Id { get; set; }
     }
 }

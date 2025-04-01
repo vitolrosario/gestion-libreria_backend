@@ -17,9 +17,12 @@ namespace Controllers
         }
 
         [HttpGet]
-        public async Task<IEnumerable<BookSale>> GetBookSales(int? clientId)
+        public async Task<IEnumerable<BookSale>> GetBookSales(
+            [FromQuery] int? clientId,
+            [FromQuery] DateTime? startDate,
+            [FromQuery] DateTime? endDate)
         {
-            return await _bookSaleService.GetBookSalesAsync(clientId);
+            return await _bookSaleService.GetBookSalesAsync(clientId, startDate, endDate);
         }
 
         [HttpPost]
